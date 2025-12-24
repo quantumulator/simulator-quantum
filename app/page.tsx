@@ -19,7 +19,7 @@ export default function Home() {
               Simulator
             </Link>
             <a 
-              href="https://github.com" 
+              href="https://github.com/quantumulator/simulator-quantum" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -58,7 +58,7 @@ export default function Home() {
               <ArrowRight className="h-5 w-5" />
             </Link>
             <a
-              href="https://github.com"
+              href="https://github.com/quantumulator/simulator-quantum"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-8 py-4 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
@@ -207,7 +207,7 @@ export default function Home() {
             </p>
             <div className="flex items-center gap-4">
               <a 
-                href="https://github.com" 
+                href="https://github.com/quantumulator/simulator-quantum" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"

@@ -496,7 +496,7 @@ export default function QuantumSimulatorPage() {
             </Button>
             <SettingsDialog />
             <Button variant="ghost" size="icon" asChild>
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/quantumulator/simulator-quantum" target="_blank" rel="noopener noreferrer">
                 <Github className="h-5 w-5" />
               </a>
             </Button>
