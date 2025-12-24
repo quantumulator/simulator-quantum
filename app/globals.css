@@ -1,26 +1,630 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: 250 250 250;
+  --foreground: 23 23 23;
+  --card: 255 255 255;
+  --card-foreground: 23 23 23;
+  --popover: 255 255 255;
+  --popover-foreground: 23 23 23;
+  --primary: 139 92 246;
+  --primary-foreground: 255 255 255;
+  --secondary: 244 244 245;
+  --secondary-foreground: 24 24 27;
+  --muted: 244 244 245;
+  --muted-foreground: 113 113 122;
+  --accent: 244 244 245;
+  --accent-foreground: 24 24 27;
+  --destructive: 239 68 68;
+  --destructive-foreground: 255 255 255;
+  --border: 228 228 231;
+  --input: 228 228 231;
+  --ring: 139 92 246;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 10 10 10;
+  --foreground: 237 237 237;
+  --card: 24 24 27;
+  --card-foreground: 237 237 237;
+  --popover: 24 24 27;
+  --popover-foreground: 237 237 237;
+  --primary: 139 92 246;
+  --primary-foreground: 255 255 255;
+  --secondary: 39 39 42;
+  --secondary-foreground: 250 250 250;
+  --muted: 39 39 42;
+  --muted-foreground: 161 161 170;
+  --accent: 39 39 42;
+  --accent-foreground: 250 250 250;
+  --destructive: 239 68 68;
+  --destructive-foreground: 255 255 255;
+  --border: 39 39 42;
+  --input: 39 39 42;
+  --ring: 139 92 246;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: rgb(var(--background));
+  --color-foreground: rgb(var(--foreground));
+  --color-card: rgb(var(--card));
+  --color-card-foreground: rgb(var(--card-foreground));
+  --color-popover: rgb(var(--popover));
+  --color-popover-foreground: rgb(var(--popover-foreground));
+  --color-primary: rgb(var(--primary));
+  --color-primary-foreground: rgb(var(--primary-foreground));
+  --color-secondary: rgb(var(--secondary));
+  --color-secondary-foreground: rgb(var(--secondary-foreground));
+  --color-muted: rgb(var(--muted));
+  --color-muted-foreground: rgb(var(--muted-foreground));
+  --color-accent: rgb(var(--accent));
+  --color-accent-foreground: rgb(var(--accent-foreground));
+  --color-destructive: rgb(var(--destructive));
+  --color-destructive-foreground: rgb(var(--destructive-foreground));
+  --color-border: rgb(var(--border));
+  --color-input: rgb(var(--input));
+  --color-ring: rgb(var(--ring));
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: rgb(var(--border));
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--muted-foreground) / 0.5);
+}
+
+/* ========================================
+   ENHANCED QUANTUM SIMULATOR STYLES
+   ======================================== */
+
+/* Glassmorphism effects */
+.glass {
+  background: rgb(var(--card) / 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgb(var(--border) / 0.5);
+}
+
+.glass-dark {
+  background: rgb(0 0 0 / 0.4);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgb(255 255 255 / 0.1);
+}
+
+/* Gradient backgrounds */
+.bg-quantum-gradient {
+  background: linear-gradient(135deg, 
+    rgb(var(--primary) / 0.1) 0%, 
+    rgb(88 28 135 / 0.1) 50%, 
+    rgb(15 23 42 / 0.1) 100%);
+}
+
+.bg-hero-gradient {
+  background: linear-gradient(180deg,
+    rgb(var(--background)) 0%,
+    rgb(var(--primary) / 0.05) 50%,
+    rgb(var(--background)) 100%);
+}
+
+/* Animated gradient border */
+.gradient-border {
+  position: relative;
+  background: rgb(var(--card));
+  border-radius: var(--radius);
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, 
+    rgb(var(--primary)), 
+    rgb(168 85 247), 
+    rgb(236 72 153), 
+    rgb(var(--primary)));
+  border-radius: calc(var(--radius) + 2px);
+  z-index: -1;
+  background-size: 300% 300%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Quantum-specific animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgb(var(--primary) / 0.5);
+  }
+  50% {
+    box-shadow: 0 0 25px rgb(var(--primary) / 0.8),
+                0 0 50px rgb(var(--primary) / 0.4);
+  }
+}
+
+.quantum-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out forwards;
+}
+
+/* Particle background effect */
+.particle-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.particle-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgb(var(--primary) / 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgb(168 85 247 / 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgb(236 72 153 / 0.05) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+/* Gate button enhanced effects */
+.gate-button {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.gate-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.1), transparent);
+  pointer-events: none;
+}
+
+.gate-button:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 4px 15px rgb(var(--primary) / 0.3),
+    0 0 30px rgb(var(--primary) / 0.2);
+}
+
+.gate-button:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+/* Skill level badges */
+.badge-beginner {
+  background: linear-gradient(135deg, rgb(34 197 94), rgb(22 163 74));
+  color: white;
+}
+
+.badge-intermediate {
+  background: linear-gradient(135deg, rgb(251 191 36), rgb(245 158 11));
+  color: rgb(23 23 23);
+}
+
+.badge-advanced {
+  background: linear-gradient(135deg, rgb(239 68 68), rgb(220 38 38));
+  color: white;
+}
+
+/* Qubit wire styles */
+.qubit-wire {
+  position: relative;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    rgb(var(--muted-foreground) / 0.3), 
+    rgb(var(--primary) / 0.6), 
+    rgb(var(--muted-foreground) / 0.3));
+}
+
+.qubit-wire::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgb(var(--primary)) 50%, 
+    transparent 100%);
+  animation: wire-pulse 2s ease-in-out infinite;
+  opacity: 0.5;
+}
+
+@keyframes wire-pulse {
+  0%, 100% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+}
+
+/* State display enhancements */
+.state-amplitude {
+  transition: all 0.3s ease;
+}
+
+.state-amplitude:hover {
+  background: rgb(var(--primary) / 0.1);
+  transform: scale(1.02);
+}
+
+.probability-bar {
+  transition: width 0.5s ease-out;
+  background: linear-gradient(90deg, rgb(var(--primary)), rgb(168 85 247));
+}
+
+/* Bloch sphere container */
+.bloch-container {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, 
+    rgb(var(--primary) / 0.05) 0%, 
+    transparent 70%);
+}
+
+/* Tutorial overlay */
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+}
+
+.tutorial-spotlight {
+  box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.7);
+  border-radius: var(--radius);
+  position: relative;
+  z-index: 101;
+}
+
+/* Tooltip enhancements */
+.tooltip-quantum {
+  background: rgb(var(--popover));
+  border: 1px solid rgb(var(--primary) / 0.3);
+  box-shadow: 
+    0 4px 20px rgb(0 0 0 / 0.3),
+    0 0 15px rgb(var(--primary) / 0.2);
+}
+
+/* Chat interface */
+.chat-message {
+  animation: fade-in-up 0.3s ease-out;
+}
+
+.chat-message-user {
+  background: linear-gradient(135deg, rgb(var(--primary)), rgb(124 58 237));
+}
+
+.chat-message-ai {
+  background: rgb(var(--secondary));
+  border: 1px solid rgb(var(--border));
+}
+
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 12px;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  background: rgb(var(--muted-foreground));
+  border-radius: 50%;
+  animation: typing-bounce 1.4s ease-in-out infinite;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-8px); }
+}
+
+/* Monaco editor customization */
+.monaco-editor {
+  border-radius: var(--radius);
+}
+
+.monaco-editor .margin {
+  background: transparent !important;
+}
+
+/* Code editor container */
+.code-editor-container {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid rgb(var(--border));
+}
+
+.code-editor-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  background: rgb(var(--secondary));
+  border-bottom: 1px solid rgb(var(--border));
+  z-index: 10;
+}
+
+/* Three.js canvas styling */
+canvas {
+  outline: none;
+}
+
+/* Circuit builder grid */
+.circuit-grid {
+  display: grid;
+  gap: 1px;
+  background: rgb(var(--border) / 0.3);
+}
+
+.circuit-cell {
+  background: rgb(var(--card));
+  transition: all 0.2s ease;
+}
+
+.circuit-cell:hover {
+  background: rgb(var(--primary) / 0.1);
+}
+
+.circuit-cell.has-gate {
+  background: rgb(var(--primary) / 0.15);
+}
+
+/* Loading states */
+.skeleton {
+  background: linear-gradient(90deg,
+    rgb(var(--muted)) 0%,
+    rgb(var(--muted-foreground) / 0.1) 50%,
+    rgb(var(--muted)) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Success/Error states */
+.success-pulse {
+  animation: success-pulse 0.5s ease-out;
+}
+
+@keyframes success-pulse {
+  0% { box-shadow: 0 0 0 0 rgb(34 197 94 / 0.7); }
+  100% { box-shadow: 0 0 0 20px rgb(34 197 94 / 0); }
+}
+
+.error-shake {
+  animation: error-shake 0.5s ease-out;
+}
+
+@keyframes error-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .gate-button {
+    padding: 0.5rem;
+  }
+  
+  .glass {
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* ========================================
+   MARKDOWN CONTENT STYLES
+   ======================================== */
+
+.markdown-content {
+  line-height: 1.6;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.markdown-content h1 {
+  font-size: 1.25rem;
+  color: rgb(var(--primary));
+}
+
+.markdown-content h2 {
+  font-size: 1.1rem;
+  color: rgb(var(--primary));
+}
+
+.markdown-content h3 {
+  font-size: 1rem;
+}
+
+.markdown-content p {
+  margin: 0.5rem 0;
+}
+
+.markdown-content .code-block {
+  display: block;
+  background: #1e1e1e;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 0.75rem 0;
+  overflow-x: auto;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #d4d4d4;
+  border: 1px solid rgb(var(--border) / 0.3);
+}
+
+.markdown-content .inline-code {
+  background: rgb(var(--muted));
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.85em;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: 0.5rem 0;
+  padding-left: 0;
+}
+
+.markdown-content li {
+  margin: 0.25rem 0;
+}
+
+.markdown-content strong {
+  font-weight: 600;
+  color: rgb(var(--foreground));
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+.markdown-content a {
+  color: rgb(var(--primary));
+  text-decoration: underline;
+}
+
+.markdown-content a:hover {
+  text-decoration: none;
+}
+
+.markdown-content .math-block {
+  background: rgb(var(--muted) / 0.5);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-family: var(--font-mono), monospace;
+  text-align: center;
+  margin: 0.75rem 0;
+  overflow-x: auto;
+}
+
+.markdown-content .math-inline {
+  font-family: var(--font-mono), monospace;
+  background: rgb(var(--muted) / 0.3);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.125rem;
+}
+
+/* Table styles in markdown */
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 0.875rem;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid rgb(var(--border));
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.markdown-content th {
+  background: rgb(var(--muted));
+  font-weight: 600;
+}
+
+.markdown-content tr:nth-child(even) {
+  background: rgb(var(--muted) / 0.3);
 }
