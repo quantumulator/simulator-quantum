@@ -25,13 +25,13 @@ An **open-source, AI-powered quantum computing simulator** that makes quantum me
 
 ```bash
 # 1. Clone
-git clone https://github.com/yourusername/quantum-simulator.git && cd quantum-simulator
+git clone https://github.com/quantumulator/simulator-quantum.git && cd simulator-quantum
 
 # 2. Install
 npm install
 
 # 3. Setup AI (free)
-# Get API key from https://makersuite.google.com/app/apikey
+# Get API key from https://aistudio.google.com/api-keys
 # Create .env.local with: NEXT_PUBLIC_GEMINI_API_KEY=your_key
 
 # 4. Run
@@ -138,8 +138,8 @@ AI:        Gemini API, OpenAI, Anthropic
 ## 🧪 Try It Now
 
 **No installation required for basic features:**
-1. Go to [Quantum Simulator](https://quantum-simulator.dev) *(coming soon)*
-2. Get free API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+1. Go to [Quantum Simulator](https://simulator-quantum.vercel.app/)
+2. Get free API key from [Google AI Studio](https://aistudio.google.com/api-keys)
 3. Paste key in Settings
 4. Start building quantum circuits!
 
@@ -150,7 +150,7 @@ npm run dev
 # Open http://localhost:3000
 ```
 
-## 🤝 Contributing
+## 🤝 Contributing *(coming soon)*
 
 We love contributions! Help us make quantum computing accessible to everyone.
 
@@ -168,9 +168,9 @@ We love contributions! Help us make quantum computing accessible to everyone.
 - 💡 Suggest features
 - 🌐 Translate to other languages
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines. *(coming soon)*
 
-## 📜 License
+## 📜 License *(coming soon)*
 
 This project uses the **Community-Commercial License (CCL-NC)** - free for personal/educational use, requires license for commercial use.
 
@@ -197,13 +197,13 @@ Built with love using:
 - ⭐ Star this repo if you find it useful!
 - 🔗 Share with other quantum enthusiasts
 - 💬 Join the discussions
-- 🐦 Follow us on [Twitter](https://twitter.com/)
-- 💰 [Sponsor development](https://github.com/sponsors/)
+- 🐦 Follow us on [Twitter](https://twitter.com/) *(coming soon)*
+- 💰 [Sponsor development](https://github.com/sponsors/) *(coming soon)*
 
 ---
 
 **Questions?** Open an issue or ask in [Discussions](https://github.com/issues)
 
-**Commercial use?** Contact us at [business@quantum-simulator.dev](mailto:business@quantum-simulator.dev)
+**Commercial use?** *(coming soon)*
 
 **Made with ❤️ for the quantum computing community**
