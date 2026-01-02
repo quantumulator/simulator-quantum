@@ -24,18 +24,27 @@ function BlochSphereMesh({ coordinates, qubitIndex, showTrail = true, isAnimatin
   const [hovered, setHovered] = useState<string | null>(null);
 
   // Track state history for trail
-  const currentPos = useMemo(() => 
+  const currentPos = useMemo(() =>
     new THREE.Vector3(coordinates.x, coordinates.z, coordinates.y),
     [coordinates]
   );
 
-  // Add to trail
-  if (showTrail && trailRef.current.length < 100) {
+  // Add to trail with proper cleanup (limit to 50 points to prevent memory leak)
+  React.useEffect(() => {
+    if (!showTrail) {
+      trailRef.current = [];
+      return;
+    }
+
     const lastPos = trailRef.current[trailRef.current.length - 1];
     if (!lastPos || lastPos.distanceTo(currentPos) > 0.01) {
       trailRef.current.push(currentPos.clone());
+      // Limit trail to 50 points
+      if (trailRef.current.length > 50) {
+        trailRef.current = trailRef.current.slice(-50);
+      }
     }
-  }
+  }, [currentPos, showTrail]);
 
   // Animate the state vector
   useFrame((state) => {
@@ -48,7 +57,7 @@ function BlochSphereMesh({ coordinates, qubitIndex, showTrail = true, isAnimatin
   // Calculate arrow direction
   const direction = new THREE.Vector3(coordinates.x, coordinates.z, coordinates.y);
   const length = direction.length();
-  
+
   // Axis lines with highlighting
   const axisLength = 1.3;
   const xColor = highlightedAxis === 'x' ? '#ff6b6b' : '#ef4444';
@@ -57,13 +66,13 @@ function BlochSphereMesh({ coordinates, qubitIndex, showTrail = true, isAnimatin
   const xWidth = highlightedAxis === 'x' ? 3 : 1;
   const yWidth = highlightedAxis === 'y' ? 3 : 1;
   const zWidth = highlightedAxis === 'z' ? 3 : 1;
-  
+
   // Calculate spherical coordinates for display
   const theta = Math.acos(coordinates.z);
   const phi = Math.atan2(coordinates.y, coordinates.x);
   const thetaDeg = (theta * 180 / Math.PI).toFixed(1);
   const phiDeg = (phi * 180 / Math.PI).toFixed(1);
-  
+
   return (
     <group>
       {/* Glow effect for sphere */}
@@ -75,7 +84,7 @@ function BlochSphereMesh({ coordinates, qubitIndex, showTrail = true, isAnimatin
           opacity={0.05}
         />
       </mesh>
-      
+
       {/* Wireframe sphere */}
       <mesh ref={sphereRef}>
         <sphereGeometry args={[1, 32, 32]} />
@@ -189,7 +198,7 @@ function BlochSphereMesh({ coordinates, qubitIndex, showTrail = true, isAnimatin
               <sphereGeometry args={[0.08, 16, 16]} />
               <meshBasicMaterial color="#8b5cf6" transparent opacity={0.3} />
             </mesh>
-            
+
             {/* Coordinates display */}
             <Html position={[coordinates.x + 0.2, coordinates.z + 0.2, coordinates.y]}>
               <div className="bg-black/80 text-white text-xs p-1.5 rounded font-mono whitespace-nowrap">
@@ -214,7 +223,7 @@ function BlochSphereMesh({ coordinates, qubitIndex, showTrail = true, isAnimatin
         color="#666"
         lineWidth={1}
       />
-      
+
       {/* Meridian circles */}
       <Line
         points={Array.from({ length: 65 }, (_, i) => {
@@ -243,14 +252,14 @@ function BlochSphereMesh({ coordinates, qubitIndex, showTrail = true, isAnimatin
 // Camera controls component
 function CameraController({ onReset }: { onReset: boolean }) {
   const { camera } = useThree();
-  
+
   React.useEffect(() => {
     if (onReset) {
       camera.position.set(3, 2, 3);
       camera.lookAt(0, 0, 0);
     }
   }, [onReset, camera]);
-  
+
   return null;
 }
 
@@ -273,7 +282,7 @@ export function BlochSphere() {
   // Calculate grid layout
   const cols = Math.min(numQubits, 4);
   const rows = Math.ceil(numQubits / cols);
-  
+
   const handleResetCamera = () => {
     setResetCamera(true);
     setTimeout(() => setResetCamera(false), 100);
@@ -328,7 +337,7 @@ export function BlochSphere() {
             </Button>
           </div>
         </div>
-        
+
         {/* Axis highlight buttons */}
         <div className="flex gap-1 mt-2">
           <Button
@@ -361,7 +370,7 @@ export function BlochSphere() {
         </div>
       </CardHeader>
       <CardContent className="flex-1 min-h-0">
-        <div 
+        <div
           className="w-full bg-background rounded-lg overflow-hidden"
           style={{ height: '100%', minHeight: '200px' }}
         >
@@ -372,20 +381,20 @@ export function BlochSphere() {
             <ambientLight intensity={0.5} />
             <pointLight position={[10, 10, 10]} intensity={0.8} />
             <pointLight position={[-10, -10, -10]} intensity={0.3} color="#8b5cf6" />
-            
+
             <CameraController onReset={resetCamera} />
-            
+
             {blochCoordinates.map((coords, index) => {
               const col = index % cols;
               const row = Math.floor(index / cols);
               const spacing = 3.5;
               const offsetX = (col - (cols - 1) / 2) * spacing;
               const offsetY = (row - (rows - 1) / 2) * -spacing;
-              
+
               return (
                 <group key={index} position={[offsetX, offsetY, 0]}>
-                  <BlochSphereMesh 
-                    coordinates={coords} 
+                  <BlochSphereMesh
+                    coordinates={coords}
                     qubitIndex={index}
                     showTrail={showTrail}
                     isAnimating={isAnimating}
@@ -394,7 +403,7 @@ export function BlochSphere() {
                 </group>
               );
             })}
-            
+
             <OrbitControls
               enablePan={true}
               enableZoom={true}
@@ -406,7 +415,7 @@ export function BlochSphere() {
             />
           </Canvas>
         </div>
-        
+
         {showInfo && (
           <div className="mt-3 text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg space-y-1">
             <p className="flex items-center gap-2">

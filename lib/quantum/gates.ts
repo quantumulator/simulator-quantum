@@ -155,6 +155,76 @@ export function CPhase(phi: number): Matrix {
   ];
 }
 
+/** SX Gate: Square root of X */
+export const SX: Matrix = [
+  [complex(0.5, 0.5), complex(0.5, -0.5)],
+  [complex(0.5, -0.5), complex(0.5, 0.5)],
+];
+
+/** SX-dagger Gate */
+export const SXDag: Matrix = [
+  [complex(0.5, -0.5), complex(0.5, 0.5)],
+  [complex(0.5, 0.5), complex(0.5, -0.5)],
+];
+
+/** RXX Gate: Rotation around XX axis */
+export function RXX(theta: number): Matrix {
+  const cos = Math.cos(theta / 2);
+  const sin = Math.sin(theta / 2);
+  const m = identity(4);
+  m[0][0] = complex(cos);
+  m[0][3] = complex(0, -sin);
+  m[1][1] = complex(cos);
+  m[1][2] = complex(0, -sin);
+  m[2][1] = complex(0, -sin);
+  m[2][2] = complex(cos);
+  m[3][0] = complex(0, -sin);
+  m[3][3] = complex(cos);
+  return m;
+}
+
+/** RYY Gate: Rotation around YY axis */
+export function RYY(theta: number): Matrix {
+  const cos = Math.cos(theta / 2);
+  const sin = Math.sin(theta / 2);
+  const m = identity(4);
+  m[0][0] = complex(cos);
+  m[0][3] = complex(0, sin);
+  m[1][1] = complex(cos);
+  m[1][2] = complex(0, -sin);
+  m[2][1] = complex(0, -sin);
+  m[2][2] = complex(cos);
+  m[3][0] = complex(0, sin);
+  m[3][3] = complex(cos);
+  return m;
+}
+
+/** RZZ Gate: Rotation around ZZ axis */
+export function RZZ(theta: number): Matrix {
+  const cos = Math.cos(theta / 2);
+  const sin = Math.sin(theta / 2);
+  const m = identity(4);
+  const p = fromPolar(1, -theta / 2);
+  const q = fromPolar(1, theta / 2);
+  m[0][0] = p;
+  m[1][1] = q;
+  m[2][2] = q;
+  m[3][3] = p;
+  return m;
+}
+
+/** RCCX Gate: Relative-phase Toffoli */
+export const RCCX: Matrix = (() => {
+  const m = identity(8);
+  m[6][6] = complex(0);
+  m[6][7] = complex(1);
+  m[7][6] = complex(1);
+  m[7][7] = complex(0);
+  // Add some phase shifts to make it "relative phase"
+  m[5][5] = complex(-1);
+  return m;
+})();
+
 // Three-Qubit Gates
 
 /** Toffoli (CCNOT) Gate */
@@ -179,6 +249,24 @@ export const Fredkin: Matrix = (() => {
   return m;
 })();
 
+/** Controlled-Controlled-Z (CCZ) Gate */
+export const CCZ: Matrix = (() => {
+  const m = identity(8);
+  m[7][7] = complex(-1);
+  return m;
+})();
+
+/** Controlled-Hadamard (CH) Gate */
+export const CH: Matrix = (() => {
+  const m = identity(4);
+  const h = H;
+  m[2][2] = h[0][0];
+  m[2][3] = h[0][1];
+  m[3][2] = h[1][0];
+  m[3][3] = h[1][1];
+  return m;
+})();
+
 // Gate Information
 
 export interface GateInfo {
@@ -197,13 +285,27 @@ export const GATE_LIBRARY: Record<string, GateInfo> = {
   Z: { name: 'Pauli-Z', symbol: 'Z', qubits: 1, matrix: Z, description: 'Phase flip' },
   H: { name: 'Hadamard', symbol: 'H', qubits: 1, matrix: H, description: 'Creates superposition' },
   S: { name: 'S Gate', symbol: 'S', qubits: 1, matrix: S, description: 'π/2 phase gate' },
+  SDag: { name: 'S† Gate', symbol: 'S†', qubits: 1, matrix: SDag, description: '-π/2 phase gate' },
   T: { name: 'T Gate', symbol: 'T', qubits: 1, matrix: T, description: 'π/4 phase gate' },
+  TDag: { name: 'T† Gate', symbol: 'T†', qubits: 1, matrix: TDag, description: '-π/4 phase gate' },
+  SX: { name: 'SX Gate', symbol: 'SX', qubits: 1, matrix: SX, description: 'Square root of X' },
+  SXDag: { name: 'SX† Gate', symbol: 'SX†', qubits: 1, matrix: SXDag, description: 'Square root of X adjoint' },
   Rx: { name: 'X Rotation', symbol: 'Rx', qubits: 1, matrix: (p) => Rx(p[0]), params: ['θ'], description: 'Rotation around X-axis' },
   Ry: { name: 'Y Rotation', symbol: 'Ry', qubits: 1, matrix: (p) => Ry(p[0]), params: ['θ'], description: 'Rotation around Y-axis' },
   Rz: { name: 'Z Rotation', symbol: 'Rz', qubits: 1, matrix: (p) => Rz(p[0]), params: ['θ'], description: 'Rotation around Z-axis' },
+  Phase: { name: 'Phase', symbol: 'P', qubits: 1, matrix: (p) => Phase(p[0]), params: ['φ'], description: 'Arbitrary phase gate' },
+  U3: { name: 'U3 Gate', symbol: 'U3', qubits: 1, matrix: (p) => U3(p[0], p[1] || 0, p[2] || 0), params: ['θ', 'φ', 'λ'], description: 'Universal single-qubit gate' },
   CNOT: { name: 'CNOT', symbol: 'CX', qubits: 2, matrix: CNOT, description: 'Controlled-NOT gate' },
   CZ: { name: 'CZ', symbol: 'CZ', qubits: 2, matrix: CZ, description: 'Controlled-Z gate' },
+  CH: { name: 'CH', symbol: 'CH', qubits: 2, matrix: CH, description: 'Controlled-Hadamard gate' },
   SWAP: { name: 'SWAP', symbol: 'SW', qubits: 2, matrix: SWAP, description: 'Swaps two qubits' },
+  iSWAP: { name: 'iSWAP', symbol: 'iSW', qubits: 2, matrix: iSWAP, description: 'Imaginary SWAP gate' },
+  CPhase: { name: 'CPhase', symbol: 'CP', qubits: 2, matrix: (p) => CPhase(p[0]), params: ['φ'], description: 'Controlled-phase gate' },
+  RXX: { name: 'RXX Gate', symbol: 'RXX', qubits: 2, matrix: (p) => RXX(p[0]), params: ['θ'], description: 'Rotation around XX axis' },
+  RYY: { name: 'RYY Gate', symbol: 'RYY', qubits: 2, matrix: (p) => RYY(p[0]), params: ['θ'], description: 'Rotation around YY axis' },
+  RZZ: { name: 'RZZ Gate', symbol: 'RZZ', qubits: 2, matrix: (p) => RZZ(p[0]), params: ['θ'], description: 'Rotation around ZZ axis' },
   Toffoli: { name: 'Toffoli', symbol: 'CCX', qubits: 3, matrix: Toffoli, description: 'Controlled-controlled-NOT' },
   Fredkin: { name: 'Fredkin', symbol: 'CSW', qubits: 3, matrix: Fredkin, description: 'Controlled-SWAP' },
+  CCZ: { name: 'CCZ', symbol: 'CCZ', qubits: 3, matrix: CCZ, description: 'Controlled-controlled-Z' },
+  RCCX: { name: 'RCCX', symbol: 'RCCX', qubits: 3, matrix: RCCX, description: 'Relative-phase Toffoli' },
 };

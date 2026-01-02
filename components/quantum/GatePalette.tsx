@@ -9,10 +9,10 @@ import { GATE_LIBRARY } from '@/lib/quantum/gates';
 import { cn } from '@/lib/utils';
 
 const GATE_CATEGORIES = {
-  'Single Qubit': ['I', 'X', 'Y', 'Z', 'H', 'S', 'T'],
-  'Rotations': ['Rx', 'Ry', 'Rz'],
-  'Two Qubit': ['CNOT', 'CZ', 'SWAP'],
-  'Three Qubit': ['Toffoli', 'Fredkin'],
+  'Single Qubit': ['I', 'X', 'Y', 'Z', 'H', 'S', 'SDag', 'T', 'TDag', 'SX', 'SXDag'],
+  'Rotations': ['Rx', 'Ry', 'Rz', 'Phase', 'U3'],
+  'Two Qubit': ['CNOT', 'CZ', 'CH', 'SWAP', 'iSWAP', 'CPhase', 'RXX', 'RYY', 'RZZ'],
+  'Three Qubit': ['Toffoli', 'Fredkin', 'CCZ', 'RCCX'],
 };
 
 const GATE_COLORS: Record<string, string> = {
@@ -22,15 +22,29 @@ const GATE_COLORS: Record<string, string> = {
   Z: 'bg-blue-500',
   H: 'bg-purple-500',
   S: 'bg-yellow-500',
+  SDag: 'bg-yellow-600',
   T: 'bg-orange-500',
+  TDag: 'bg-orange-600',
+  SX: 'bg-red-600',
+  SXDag: 'bg-red-700',
   Rx: 'bg-red-400',
   Ry: 'bg-green-400',
   Rz: 'bg-blue-400',
+  Phase: 'bg-indigo-400',
+  U3: 'bg-pink-400',
   CNOT: 'bg-indigo-500',
   CZ: 'bg-violet-500',
+  CH: 'bg-purple-600',
   SWAP: 'bg-pink-500',
+  iSWAP: 'bg-pink-600',
+  CPhase: 'bg-violet-600',
+  RXX: 'bg-indigo-600',
+  RYY: 'bg-green-600',
+  RZZ: 'bg-blue-600',
   Toffoli: 'bg-cyan-500',
   Fredkin: 'bg-teal-500',
+  CCZ: 'bg-blue-600',
+  RCCX: 'bg-cyan-600',
 };
 
 export function GatePalette() {
@@ -52,22 +66,31 @@ export function GatePalette() {
                 {gates.map((gateName) => {
                   const gateInfo = GATE_LIBRARY[gateName];
                   const isSelected = selectedGate === gateName;
-                  
+
                   return (
                     <Tooltip key={gateName}>
                       <TooltipTrigger asChild>
-                        <Button
-                          variant={isSelected ? "default" : "outline"}
-                          size="sm"
-                          className={cn(
-                            "h-10 w-full font-mono font-bold",
-                            isSelected && GATE_COLORS[gateName],
-                            isSelected && "text-white border-0"
-                          )}
-                          onClick={() => setSelectedGate(isSelected ? null : gateName)}
+                        <div
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('gate', gateName);
+                            e.dataTransfer.effectAllowed = 'copy';
+                          }}
+                          className="w-full"
                         >
-                          {gateInfo?.symbol || gateName}
-                        </Button>
+                          <Button
+                            variant={isSelected ? "default" : "outline"}
+                            size="sm"
+                            className={cn(
+                              "h-10 w-full font-mono font-bold cursor-grab active:cursor-grabbing",
+                              isSelected && GATE_COLORS[gateName],
+                              isSelected && "text-white border-0"
+                            )}
+                            onClick={() => setSelectedGate(isSelected ? null : gateName)}
+                          >
+                            {gateInfo?.symbol || gateName}
+                          </Button>
+                        </div>
                       </TooltipTrigger>
                       <TooltipContent side="right">
                         <div className="space-y-1">
@@ -85,7 +108,7 @@ export function GatePalette() {
             </div>
           ))}
         </TooltipProvider>
-        
+
         <div className="pt-4 border-t">
           <p className="text-xs text-muted-foreground">
             Click a gate to select, then click on the circuit to place it.

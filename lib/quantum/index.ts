@@ -4,7 +4,7 @@
  */
 
 // Re-export complex numbers with explicit naming to avoid conflicts
-export { 
+export {
   type Complex,
   complex,
   add,
@@ -33,11 +33,14 @@ export * from './matrix';
 export * from './gates';
 
 export { QuantumSimulator } from './simulator';
-export type { 
-  QuantumState, 
-  MeasurementResult, 
-  SimulatorConfig, 
+export type {
+  QuantumState,
+  MeasurementResult,
+  SimulatorConfig,
   NoiseModel,
   GateOperation,
-  CircuitStep 
+  CircuitStep
 } from './simulator';
+
+// Validators for robust error handling
+export * from './validators';
