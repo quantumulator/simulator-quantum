@@ -54,7 +54,7 @@ export class QuantumSimulator {
       this.numQubits = config.numQubits;
       this.noiseModel = config.noiseModel;
     }
-    
+
     const stateSize = Math.pow(2, this.numQubits);
     this.state = Array(stateSize).fill(null).map(() => ({ ...ZERO }));
     this.state[0] = { ...ONE }; // Initialize to |0...0⟩
@@ -95,7 +95,7 @@ export class QuantumSimulator {
   initialize(basisState: string | number): void {
     const stateSize = Math.pow(2, this.numQubits);
     this.state = Array(stateSize).fill(null).map(() => ({ ...ZERO }));
-    
+
     let index: number;
     if (typeof basisState === 'string') {
       // Parse state like "|00⟩" or "|101⟩"
@@ -104,11 +104,11 @@ export class QuantumSimulator {
     } else {
       index = basisState;
     }
-    
+
     if (index >= 0 && index < stateSize) {
       this.state[index] = { ...ONE };
     }
-    
+
     this.history = [[...this.state]];
     this.operations = [];
   }
@@ -121,13 +121,13 @@ export class QuantumSimulator {
     if (stateVector.length !== expectedSize) {
       throw new Error(`State vector must have ${expectedSize} elements`);
     }
-    
+
     // Verify normalization
     const norm = stateVector.reduce((sum, amp) => sum + magnitudeSquared(amp), 0);
     if (Math.abs(norm - 1) > 1e-6) {
       throw new Error(`State vector must be normalized (norm = ${norm})`);
     }
-    
+
     this.state = stateVector.map(c => ({ ...c }));
     this.history.push([...this.state]);
   }
@@ -142,12 +142,12 @@ export class QuantumSimulator {
 
     // Build the full operator using tensor products
     let fullOperator = qubit === 0 ? gate : identity(2);
-    
+
     for (let i = 1; i < this.numQubits; i++) {
       const nextOp = i === qubit ? gate : identity(2);
       fullOperator = tensorProduct(fullOperator, nextOp);
     }
-    
+
     this.state = matrixVectorMultiply(fullOperator, this.state);
     this.history.push([...this.state]);
   }
@@ -156,11 +156,11 @@ export class QuantumSimulator {
    * Apply a two-qubit gate
    */
   applyTwoQubitGate(gate: Matrix, qubit1: number, qubit2: number): void {
-    if (qubit1 < 0 || qubit1 >= this.numQubits || 
-        qubit2 < 0 || qubit2 >= this.numQubits) {
+    if (qubit1 < 0 || qubit1 >= this.numQubits ||
+      qubit2 < 0 || qubit2 >= this.numQubits) {
       throw new Error(`Invalid qubit indices: ${qubit1}, ${qubit2}`);
     }
-    
+
     if (qubit1 === qubit2) {
       throw new Error('Two-qubit gate must operate on different qubits');
     }
@@ -177,14 +177,14 @@ export class QuantumSimulator {
       // Extract bits for the two qubits
       const bit1 = (i >> (n - 1 - qubit1)) & 1;
       const bit2 = (i >> (n - 1 - qubit2)) & 1;
-      
+
       // Original 2-qubit state index
       const twoQubitIndex = needsSwap ? (bit2 * 2 + bit1) : (bit1 * 2 + bit2);
 
       for (let j = 0; j < 4; j++) {
         const newBit1 = needsSwap ? (j & 1) : ((j >> 1) & 1);
         const newBit2 = needsSwap ? ((j >> 1) & 1) : (j & 1);
-        
+
         // Build new full state index
         let newIndex = i;
         // Clear and set bit1 position
@@ -193,7 +193,7 @@ export class QuantumSimulator {
         // Clear and set bit2 position
         newIndex &= ~(1 << (n - 1 - qubit2));
         newIndex |= (newBit2 << (n - 1 - qubit2));
-        
+
         const gateElement = gate[j][twoQubitIndex];
         newState[newIndex] = add(newState[newIndex], multiply(gateElement, this.state[i]));
       }
@@ -211,7 +211,7 @@ export class QuantumSimulator {
   apply(gateName: string, ...args: (number | number[])[]): void {
     let params: number[] = [];
     let qubits: number[];
-    
+
     if (Array.isArray(args[0])) {
       params = args[0] as number[];
       qubits = args.slice(1) as number[];
@@ -226,9 +226,20 @@ export class QuantumSimulator {
 
     let matrix: Matrix;
     if (typeof gateInfo.matrix === 'function') {
-      matrix = gateInfo.matrix(params);
+      // Ensure params is an array and has at least one value if required
+      const p = (params && params.length > 0) ? params : [0];
+      matrix = gateInfo.matrix(p);
     } else {
       matrix = gateInfo.matrix;
+    }
+
+    // Safety check for NaN in matrix
+    for (let i = 0; i < matrix.length; i++) {
+      for (let j = 0; j < matrix[i].length; j++) {
+        if (isNaN(matrix[i][j].real) || isNaN(matrix[i][j].imag)) {
+          throw new Error(`Gate ${gateName} produced NaN matrix elements with params ${JSON.stringify(params)}`);
+        }
+      }
     }
 
     this.operations.push({ gate: gateName, qubits, params });
@@ -290,11 +301,11 @@ export class QuantumSimulator {
 
     const n = this.numQubits;
     const stateSize = Math.pow(2, n);
-    
+
     // Calculate probabilities for |0⟩ and |1⟩
     let prob0 = 0;
     let prob1 = 0;
-    
+
     for (let i = 0; i < stateSize; i++) {
       const bit = (i >> (n - 1 - qubit)) & 1;
       const prob = magnitudeSquared(this.state[i]);
@@ -313,7 +324,7 @@ export class QuantumSimulator {
     // Collapse the state
     const normFactor = 1 / Math.sqrt(probability);
     const collapsedState: Complex[] = [];
-    
+
     for (let i = 0; i < stateSize; i++) {
       const bit = (i >> (n - 1 - qubit)) & 1;
       if (bit === outcome) {
@@ -364,11 +375,11 @@ export class QuantumSimulator {
   sample(shots: number): Map<string, number> {
     const probabilities = this.getProbabilities();
     const results = new Map<string, number>();
-    
+
     for (let shot = 0; shot < shots; shot++) {
       const random = Math.random();
       let cumulative = 0;
-      
+
       for (let i = 0; i < probabilities.length; i++) {
         cumulative += probabilities[i];
         if (random < cumulative) {
@@ -378,7 +389,7 @@ export class QuantumSimulator {
         }
       }
     }
-    
+
     return results;
   }
 
@@ -389,7 +400,7 @@ export class QuantumSimulator {
     if (targetState.length !== this.state.length) {
       throw new Error('State dimensions must match');
     }
-    
+
     let overlap = ZERO;
     for (let i = 0; i < this.state.length; i++) {
       overlap = add(overlap, multiply(
@@ -397,7 +408,7 @@ export class QuantumSimulator {
         this.state[i]
       ));
     }
-    
+
     return magnitudeSquared(overlap);
   }
 
@@ -420,35 +431,35 @@ export class QuantumSimulator {
     if (this.numQubits === 1) {
       const alpha = this.state[0];
       const beta = this.state[1];
-      
+
       // Bloch sphere coordinates
       // |ψ⟩ = cos(θ/2)|0⟩ + e^(iφ)sin(θ/2)|1⟩
       const theta = 2 * Math.acos(Math.min(1, magnitude(alpha)));
       const phi = Math.atan2(beta.imag, beta.real) - Math.atan2(alpha.imag, alpha.real);
-      
+
       return {
         x: Math.sin(theta) * Math.cos(phi),
         y: Math.sin(theta) * Math.sin(phi),
         z: Math.cos(theta),
       };
     }
-    
+
     // For multi-qubit systems, compute reduced density matrix
     // Simplified: trace out other qubits
     const n = this.numQubits;
     const stateSize = Math.pow(2, n);
-    
+
     let rho00 = 0, rho11 = 0;
     let rho01: Complex = { ...ZERO };
-    
+
     for (let i = 0; i < stateSize; i++) {
       const bit = (i >> (n - 1 - qubit)) & 1;
       const prob = magnitudeSquared(this.state[i]);
-      
+
       if (bit === 0) rho00 += prob;
       else rho11 += prob;
     }
-    
+
     // Cross terms (simplified)
     for (let i = 0; i < stateSize; i++) {
       const bit_i = (i >> (n - 1 - qubit)) & 1;
@@ -461,7 +472,7 @@ export class QuantumSimulator {
         rho01 = add(rho01, contrib);
       }
     }
-    
+
     return {
       x: 2 * rho01.real,
       y: 2 * rho01.imag,

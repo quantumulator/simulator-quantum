@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useQuantumShortcuts } from '@/hooks/use-keyboard-shortcuts';
+import { useToast } from '@/components/ui/toast';
 import dynamic from 'next/dynamic';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -14,16 +16,16 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { useQuantumStore } from '@/lib/store';
-import { 
-  GatePalette, 
-  CircuitBuilder, 
+import {
+  GatePalette,
+  CircuitBuilder,
   StateDisplay,
   ChatInterface,
   MeasurementHistogram,
 } from '@/components/quantum';
-import { 
-  Settings, 
-  Code, 
+import {
+  Settings,
+  Code,
   BarChart3,
   CircuitBoard,
   MessageSquare,
@@ -58,28 +60,28 @@ const CodeEditor = dynamic(
 );
 
 // Skill Level Selector Component
-function SkillLevelSelector({ 
-  currentLevel, 
-  onLevelChange 
-}: { 
-  currentLevel: SkillLevel; 
+function SkillLevelSelector({
+  currentLevel,
+  onLevelChange
+}: {
+  currentLevel: SkillLevel;
   onLevelChange: (level: SkillLevel) => void;
 }) {
   const levels: { level: SkillLevel; label: string; icon: React.ReactNode; description: string }[] = [
-    { 
-      level: 'beginner', 
+    {
+      level: 'beginner',
       label: 'Beginner',
       icon: <Rocket className="h-5 w-5" />,
       description: 'New to quantum computing'
     },
-    { 
-      level: 'intermediate', 
+    {
+      level: 'intermediate',
       label: 'Intermediate',
       icon: <Zap className="h-5 w-5" />,
       description: 'Know the basics'
     },
-    { 
-      level: 'advanced', 
+    {
+      level: 'advanced',
       label: 'Advanced',
       icon: <Target className="h-5 w-5" />,
       description: 'Quantum expert'
@@ -94,11 +96,10 @@ function SkillLevelSelector({
           variant={currentLevel === level ? 'default' : 'outline'}
           size="sm"
           onClick={() => onLevelChange(level)}
-          className={`gap-2 ${
-            level === 'beginner' ? 'hover:bg-green-500/20' :
+          className={`gap-2 ${level === 'beginner' ? 'hover:bg-green-500/20' :
             level === 'intermediate' ? 'hover:bg-yellow-500/20' :
-            'hover:bg-red-500/20'
-          }`}
+              'hover:bg-red-500/20'
+            }`}
         >
           {icon}
           {label}
@@ -142,7 +143,7 @@ function TutorialPanel({ onClose, onStartTutorial }: { onClose: () => void; onSt
             <X className="h-5 w-5" />
           </Button>
         </div>
-        
+
         <div className="p-6 space-y-4 overflow-y-auto max-h-[60vh]">
           {tutorials.map((tutorial) => (
             <div
@@ -157,11 +158,10 @@ function TutorialPanel({ onClose, onStartTutorial }: { onClose: () => void; onSt
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1">{tutorial.description}</p>
                   <div className="flex items-center gap-3 mt-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      tutorial.difficulty === 'beginner' ? 'badge-beginner' :
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${tutorial.difficulty === 'beginner' ? 'badge-beginner' :
                       tutorial.difficulty === 'intermediate' ? 'badge-intermediate' :
-                      'badge-advanced'
-                    }`}>
+                        'badge-advanced'
+                      }`}>
                       {tutorial.difficulty}
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -260,7 +260,7 @@ function SettingsDialog() {
               ))}
             </div>
           </div>
-          
+
           <div>
             <label className="text-sm font-medium">Model</label>
             <select
@@ -282,7 +282,7 @@ function SettingsDialog() {
               Different models offer trade-offs between speed and quality.
             </p>
           </div>
-          
+
           {/* Custom Model Section */}
           <div className="border-t pt-4">
             <div className="flex items-center justify-between mb-2">
@@ -308,7 +308,7 @@ function SettingsDialog() {
               Enter any model name supported by your selected provider.
             </p>
           </div>
-          
+
           <div>
             <label className="text-sm font-medium">API Key</label>
             <Input
@@ -322,7 +322,7 @@ function SettingsDialog() {
               Your API key is stored locally and never sent to our servers.
             </p>
           </div>
-          
+
           <Button onClick={handleSave} className="w-full gap-2" disabled={!!saveMessage}>
             {saveMessage ? (
               <>
@@ -341,7 +341,7 @@ function SettingsDialog() {
 // Onboarding Modal for new users
 function OnboardingModal({ onComplete }: { onComplete: (level: SkillLevel) => void }) {
   const [step, setStep] = useState<'welcome' | 'complete'>('welcome');
-  
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-card rounded-2xl max-w-lg w-full shadow-2xl animate-scale-in overflow-hidden">
@@ -352,12 +352,12 @@ function OnboardingModal({ onComplete }: { onComplete: (level: SkillLevel) => vo
           <h2 className="text-3xl font-bold mb-2">Welcome to Quantum Simulator! 🚀</h2>
           <p className="text-muted-foreground">Your journey into quantum computing starts here</p>
         </div>
-        
+
         <div className="p-6 space-y-4">
           <p className="text-center text-sm text-muted-foreground mb-4">
             Choose your experience level:
           </p>
-          
+
           {ONBOARDING_FLOW.welcome.options.map((option) => (
             <button
               key={option.id}
@@ -389,7 +389,7 @@ function OnboardingModal({ onComplete }: { onComplete: (level: SkillLevel) => vo
 }
 
 export default function QuantumSimulatorPage() {
-  const { initSimulator, simulator, runSimulation, circuitGates, isRunning } = useQuantumStore();
+  const { initSimulator, simulator, runSimulation, circuitGates, isRunning, clearCircuit, undo, redo, canUndo, canRedo } = useQuantumStore();
   const [activePanel, setActivePanel] = useState<'circuit' | 'code' | 'chat'>('circuit');
   const [darkMode, setDarkMode] = useState(true);
   const [skillLevel, setSkillLevel] = useState<SkillLevel>('beginner');
@@ -397,12 +397,41 @@ export default function QuantumSimulatorPage() {
   const [showTutorials, setShowTutorials] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isFirstVisit, setIsFirstVisit] = useState(false);
+  const toast = useToast();
+
+  // Keyboard shortcuts
+  useQuantumShortcuts({
+    onUndo: () => {
+      if (canUndo()) {
+        undo();
+        toast.info('Undo', 'Previous state restored');
+      }
+    },
+    onRedo: () => {
+      if (canRedo()) {
+        redo();
+        toast.info('Redo', 'State restored');
+      }
+    },
+    onRun: () => {
+      if (!isRunning && circuitGates.length > 0) {
+        runSimulation();
+        toast.success('Simulation complete', 'Circuit executed successfully');
+      }
+    },
+    onClear: () => {
+      if (circuitGates.length > 0) {
+        clearCircuit();
+        toast.info('Circuit cleared');
+      }
+    },
+  });
 
   useEffect(() => {
     if (!simulator) {
       initSimulator(2);
     }
-    
+
     // Check if first visit
     const hasVisited = localStorage.getItem('quantum-simulator-visited');
     if (!hasVisited) {
@@ -426,7 +455,7 @@ export default function QuantumSimulatorPage() {
     setSkillLevel(level);
     setShowOnboarding(false);
     localStorage.setItem('quantum-simulator-visited', 'true');
-    
+
     if (level === 'beginner') {
       setShowTutorials(true);
     }
@@ -442,11 +471,11 @@ export default function QuantumSimulatorPage() {
     <div className="min-h-screen bg-background text-foreground particle-bg">
       {/* Onboarding Modal */}
       {showOnboarding && <OnboardingModal onComplete={handleOnboardingComplete} />}
-      
+
       {/* Tutorial Panel */}
       {showTutorials && (
-        <TutorialPanel 
-          onClose={() => setShowTutorials(false)} 
+        <TutorialPanel
+          onClose={() => setShowTutorials(false)}
           onStartTutorial={handleStartTutorial}
         />
       )}
@@ -466,26 +495,26 @@ export default function QuantumSimulatorPage() {
               <p className="text-xs text-muted-foreground">AI-Powered Interactive Learning</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4">
             {/* Skill Level */}
             <SkillLevelSelector currentLevel={skillLevel} onLevelChange={setSkillLevel} />
-            
+
             <div className="h-6 w-px bg-border" />
-            
+
             {/* Tutorials */}
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="gap-2"
               onClick={() => setShowTutorials(true)}
             >
               <GraduationCap className="h-4 w-4" />
               Tutorials
             </Button>
-            
+
             <div className="h-6 w-px bg-border" />
-            
+
             {/* Settings & Theme */}
             <Button
               variant="ghost"
@@ -555,13 +584,13 @@ export default function QuantumSimulatorPage() {
                   ✨
                 </span>
               </Button>
-              
+
               <div className="flex-1" />
-              
+
               {activePanel === 'circuit' && (
-                <Button 
-                  variant="default" 
-                  size="sm" 
+                <Button
+                  variant="default"
+                  size="sm"
                   className="gap-2"
                   onClick={runSimulation}
                   disabled={isRunning}
@@ -607,7 +636,7 @@ export default function QuantumSimulatorPage() {
                 <BlochSphere />
               </TabsContent>
             </Tabs>
-            
+
             {/* Quick Help for Beginners */}
             {skillLevel === 'beginner' && (
               <div className="glass rounded-xl p-4">
@@ -640,11 +669,10 @@ export default function QuantumSimulatorPage() {
         <div className="container mx-auto px-4 flex items-center justify-between text-sm text-muted-foreground">
           <p>Open Source Quantum Simulator • Built with ❤️ for Quantum Computing</p>
           <div className="flex items-center gap-4">
-            <span className={`px-2 py-1 rounded-full text-xs ${
-              skillLevel === 'beginner' ? 'badge-beginner' :
+            <span className={`px-2 py-1 rounded-full text-xs ${skillLevel === 'beginner' ? 'badge-beginner' :
               skillLevel === 'intermediate' ? 'badge-intermediate' :
-              'badge-advanced'
-            }`}>
+                'badge-advanced'
+              }`}>
               {skillLevel} mode
             </span>
           </div>
