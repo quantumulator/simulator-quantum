@@ -346,8 +346,8 @@ function OnboardingModal({ onComplete }: { onComplete: (level: SkillLevel) => vo
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-card rounded-2xl max-w-lg w-full shadow-2xl animate-scale-in overflow-hidden">
         <div className="bg-gradient-to-br from-primary/20 via-purple-500/10 to-pink-500/10 p-8 text-center">
-          <div className="w-20 h-20 mx-auto bg-primary/20 rounded-full flex items-center justify-center mb-4">
-            <Atom className="h-10 w-10 text-primary" />
+          <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h2 className="text-3xl font-bold mb-2">Welcome to Quantum Simulator! 🚀</h2>
           <p className="text-muted-foreground">Your journey into quantum computing starts here</p>
@@ -485,12 +485,12 @@ export default function QuantumSimulatorPage() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Atom className="h-8 w-8 text-primary quantum-glow" />
-              <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full"></div>
+              <img src="/logo.png" alt="Logo" className="h-8 w-8 object-contain" />
+              <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full -z-10"></div>
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-                Quantum Simulator
+                QuantumFlow
               </h1>
               <p className="text-xs text-muted-foreground">AI-Powered Interactive Learning</p>
             </div>

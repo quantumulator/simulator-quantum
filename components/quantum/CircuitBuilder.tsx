@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { useQuantumStore, CircuitGate } from '@/lib/store';
 import { GATE_LIBRARY } from '@/lib/quantum/gates';
+import { LIMITS } from '@/lib/quantum/validators';
 import { cn } from '@/lib/utils';
 import {
   Trash2,
@@ -255,7 +256,7 @@ export function CircuitBuilder() {
   };
 
   const handleAddQubit = () => {
-    if (numQubits < 8) {
+    if (numQubits < LIMITS.MAX_QUBITS) {
       initSimulator(numQubits + 1);
     }
   };
@@ -334,7 +335,7 @@ export function CircuitBuilder() {
               size="icon"
               className="h-7 w-7"
               onClick={handleAddQubit}
-              disabled={numQubits >= 8}
+              disabled={numQubits >= LIMITS.MAX_QUBITS}
               title="Add qubit"
             >
               <Plus className="h-4 w-4" />

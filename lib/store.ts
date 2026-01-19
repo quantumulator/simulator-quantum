@@ -23,9 +23,16 @@ export interface Message {
   quiz?: QuizQuestion;
 }
 
+export interface SparseStateEntry {
+  index: number;
+  amplitude: Complex;
+  probability: number;
+}
+
 export interface SimulationResult {
   stateVector: Complex[];
   probabilities: number[];
+  sparseState: SparseStateEntry[];
   measurements?: Map<string, number>;
   blochCoordinates?: { x: number; y: number; z: number }[];
 }
@@ -150,9 +157,7 @@ export const useQuantumStore = create<QuantumStore>((set, get) => ({
     };
 
     const newGates = [...circuitGates, newGate];
-    // Truncate history after current index and add new state
     const newHistory = [...history.slice(0, historyIndex + 1), newGates.map(g => ({ ...g }))];
-    // Keep only last 50 states
     const trimmedHistory = newHistory.slice(-50);
 
     set({
@@ -200,15 +205,11 @@ export const useQuantumStore = create<QuantumStore>((set, get) => ({
     const runId = Math.random();
     set({ isRunning: true, _lastRunId: runId });
 
-    // Use setTimeout to allow UI to update and show loading state
     setTimeout(() => {
-      // Check if this is still the latest run
       if (get()._lastRunId !== runId) return;
 
       try {
         const simulator = new QuantumSimulator(numQubits);
-
-        // Sort gates by step and apply
         const sortedGates = [...circuitGates].sort((a, b) => a.step - b.step);
 
         for (const gate of sortedGates) {
@@ -219,10 +220,10 @@ export const useQuantumStore = create<QuantumStore>((set, get) => ({
           }
         }
 
+        const sparseState = simulator.getSparseState(1000);
         const stateVector = simulator.getState();
         const probabilities = simulator.getProbabilities();
 
-        // Calculate Bloch coordinates for each qubit
         const blochCoordinates = [];
         for (let i = 0; i < numQubits; i++) {
           blochCoordinates.push(simulator.getBlochCoordinates(i));
@@ -235,6 +236,7 @@ export const useQuantumStore = create<QuantumStore>((set, get) => ({
           simulationResult: {
             stateVector,
             probabilities,
+            sparseState,
             blochCoordinates,
           },
           isRunning: false,
@@ -242,13 +244,10 @@ export const useQuantumStore = create<QuantumStore>((set, get) => ({
       } catch (error) {
         console.error('Simulation error:', error);
         if (get()._lastRunId === runId) {
-          set({
-            isRunning: false,
-            simulationResult: null
-          });
+          set({ isRunning: false, simulationResult: null });
         }
       }
-    }, 0);
+    }, 10); // Small delay to allow UI to show 'Running...'
   },
 
   runMeasurement: (shots: number) => {
@@ -265,13 +264,9 @@ export const useQuantumStore = create<QuantumStore>((set, get) => ({
   },
 
   setSelectedGate: (gate: string | null) => set({ selectedGate: gate }),
-
   setSelectedQubits: (qubits: number[]) => set({ selectedQubits: qubits }),
-
   toggleCodeEditor: () => set(state => ({ showCodeEditor: !state.showCodeEditor })),
-
   setActiveTab: (tab: 'circuit' | 'visualization' | 'results') => set({ activeTab: tab }),
-
   addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => {
     const newMessage: Message = {
       ...message,
@@ -280,18 +275,12 @@ export const useQuantumStore = create<QuantumStore>((set, get) => ({
     };
     set(state => ({ messages: [...state.messages, newMessage] }));
   },
-
   setAiLoading: (loading: boolean) => set({ isAiLoading: loading }),
-
   setAiProvider: (provider: 'gemini' | 'openai' | 'anthropic') => set({ aiProvider: provider }),
-
   setAiModel: (model: string) => set({ aiModel: model }),
-
   setApiKey: (key: string) => set({ apiKey: key }),
 
   loadCircuitFromCode: (code: string) => {
-    // Parse and load circuit from code string
-    // This is a simplified parser - full implementation would use AST
     try {
       const lines = code.split('\n');
       const gatePattern = /sim\.apply\(['"](\w+)['"],?\s*(.+)?\)/;
@@ -303,24 +292,15 @@ export const useQuantumStore = create<QuantumStore>((set, get) => ({
 
       for (const line of lines) {
         const qubitsMatch = line.match(numQubitsPattern);
-        if (qubitsMatch) {
-          numQubits = parseInt(qubitsMatch[1]);
-        }
+        if (qubitsMatch) numQubits = parseInt(qubitsMatch[1]);
 
         const gateMatch = line.match(gatePattern);
         if (gateMatch) {
           const gateName = gateMatch[1];
           const argsStr = gateMatch[2];
-          const args = argsStr
-            ? argsStr.split(',').map(a => parseInt(a.trim())).filter(n => !isNaN(n))
-            : [];
+          const args = argsStr ? argsStr.split(',').map(a => parseInt(a.trim())).filter(n => !isNaN(n)) : [];
 
-          gates.push({
-            id: generateId(),
-            gate: gateName,
-            qubits: args,
-            step: step++,
-          });
+          gates.push({ id: generateId(), gate: gateName, qubits: args, step: step++ });
         }
       }
 
@@ -357,16 +337,11 @@ export const useQuantumStore = create<QuantumStore>((set, get) => ({
     });
   },
 
-  // Undo/Redo Actions
   undo: () => {
     const { historyIndex, history } = get();
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
-      const previousGates = history[newIndex];
-      set({
-        circuitGates: previousGates.map(g => ({ ...g })),
-        historyIndex: newIndex,
-      });
+      set({ circuitGates: history[newIndex].map(g => ({ ...g })), historyIndex: newIndex });
     }
   },
 
@@ -374,20 +349,10 @@ export const useQuantumStore = create<QuantumStore>((set, get) => ({
     const { historyIndex, history } = get();
     if (historyIndex < history.length - 1) {
       const newIndex = historyIndex + 1;
-      const nextGates = history[newIndex];
-      set({
-        circuitGates: nextGates.map(g => ({ ...g })),
-        historyIndex: newIndex,
-      });
+      set({ circuitGates: history[newIndex].map(g => ({ ...g })), historyIndex: newIndex });
     }
   },
 
-  canUndo: () => {
-    return get().historyIndex > 0;
-  },
-
-  canRedo: () => {
-    const { historyIndex, history } = get();
-    return historyIndex < history.length - 1;
-  },
+  canUndo: () => get().historyIndex > 0,
+  canRedo: () => get().historyIndex < get().history.length - 1,
 }));

@@ -1,9 +1,10 @@
 /**
  * Core Quantum Simulator
- * Simulates quantum states and operations using state vector representation
+ * Optimized for performance using Float64Array state vectors.
+ * Supports up to 30 qubits in desktop mode.
  */
-import { Complex, complex, magnitude, magnitudeSquared, scale, multiply, add, ZERO, ONE } from './complex';
-import { Matrix, matrixVectorMultiply, tensorProduct, identity } from './matrix';
+import { Complex, ZERO, ONE } from './complex';
+import { Matrix } from './matrix';
 import * as Gates from './gates';
 
 export interface QuantumState {
@@ -23,10 +24,10 @@ export interface SimulatorConfig {
 }
 
 export interface NoiseModel {
-  depolarizing?: number;  // Depolarizing probability
-  amplitude_damping?: number;  // T1 decay
-  phase_damping?: number;  // T2 dephasing
-  readout_error?: number;  // Measurement error
+  depolarizing?: number;
+  amplitude_damping?: number;
+  phase_damping?: number;
+  readout_error?: number;
 }
 
 export interface GateOperation {
@@ -35,15 +36,10 @@ export interface GateOperation {
   params?: number[];
 }
 
-export interface CircuitStep {
-  operations: GateOperation[];
-}
-
 export class QuantumSimulator {
-  private state: Complex[];
   private numQubits: number;
-  private history: Complex[][] = [];
-  private operations: GateOperation[] = [];
+  // State is stored as a Float64Array: [re0, im0, re1, im1, ...]
+  private state: Float64Array;
   private noiseModel?: NoiseModel;
 
   constructor(config: SimulatorConfig | number) {
@@ -56,158 +52,58 @@ export class QuantumSimulator {
     }
 
     const stateSize = Math.pow(2, this.numQubits);
-    this.state = Array(stateSize).fill(null).map(() => ({ ...ZERO }));
-    this.state[0] = { ...ONE }; // Initialize to |0...0⟩
-    this.history.push([...this.state]);
+    // 2 values per amplitude (real and imaginary)
+    this.state = new Float64Array(stateSize * 2);
+    this.state[0] = 1.0; // Initial state |0...0>
   }
 
-  /**
-   * Get the current state vector
-   */
   getState(): Complex[] {
-    return [...this.state];
+    const size = Math.pow(2, this.numQubits);
+    // Limit result size to prevent crashing the UI for massive qubit counts
+    const resultSize = Math.min(size, 1024 * 16);
+    const result: Complex[] = [];
+    for (let i = 0; i < resultSize; i++) {
+      result.push({ real: this.state[2 * i], imag: this.state[2 * i + 1] });
+    }
+    return result;
   }
 
   /**
-   * Get number of qubits
+   * Returns a sparse representation of the state for the UI
    */
-  getNumQubits(): number {
-    return this.numQubits;
-  }
+  getSparseState(maxElements = 1000): { index: number; amplitude: Complex; probability: number }[] {
+    const size = Math.pow(2, this.numQubits);
+    const results: { index: number; amplitude: Complex; probability: number }[] = [];
 
-  /**
-   * Get operation history
-   */
-  getOperations(): GateOperation[] {
-    return [...this.operations];
-  }
+    for (let i = 0; i < size; i++) {
+      const re = this.state[2 * i];
+      const im = this.state[2 * i + 1];
+      const prob = re * re + im * im;
 
-  /**
-   * Get state history
-   */
-  getHistory(): Complex[][] {
-    return this.history.map(s => [...s]);
-  }
-
-  /**
-   * Initialize to a specific computational basis state
-   */
-  initialize(basisState: string | number): void {
-    const stateSize = Math.pow(2, this.numQubits);
-    this.state = Array(stateSize).fill(null).map(() => ({ ...ZERO }));
-
-    let index: number;
-    if (typeof basisState === 'string') {
-      // Parse state like "|00⟩" or "|101⟩"
-      const bits = basisState.replace(/[|⟩>]/g, '');
-      index = parseInt(bits, 2);
-    } else {
-      index = basisState;
-    }
-
-    if (index >= 0 && index < stateSize) {
-      this.state[index] = { ...ONE };
-    }
-
-    this.history = [[...this.state]];
-    this.operations = [];
-  }
-
-  /**
-   * Set arbitrary state vector (must be normalized)
-   */
-  setState(stateVector: Complex[]): void {
-    const expectedSize = Math.pow(2, this.numQubits);
-    if (stateVector.length !== expectedSize) {
-      throw new Error(`State vector must have ${expectedSize} elements`);
-    }
-
-    // Verify normalization
-    const norm = stateVector.reduce((sum, amp) => sum + magnitudeSquared(amp), 0);
-    if (Math.abs(norm - 1) > 1e-6) {
-      throw new Error(`State vector must be normalized (norm = ${norm})`);
-    }
-
-    this.state = stateVector.map(c => ({ ...c }));
-    this.history.push([...this.state]);
-  }
-
-  /**
-   * Apply a single-qubit gate
-   */
-  applySingleQubitGate(gate: Matrix, qubit: number): void {
-    if (qubit < 0 || qubit >= this.numQubits) {
-      throw new Error(`Invalid qubit index: ${qubit}`);
-    }
-
-    // Build the full operator using tensor products
-    let fullOperator = qubit === 0 ? gate : identity(2);
-
-    for (let i = 1; i < this.numQubits; i++) {
-      const nextOp = i === qubit ? gate : identity(2);
-      fullOperator = tensorProduct(fullOperator, nextOp);
-    }
-
-    this.state = matrixVectorMultiply(fullOperator, this.state);
-    this.history.push([...this.state]);
-  }
-
-  /**
-   * Apply a two-qubit gate
-   */
-  applyTwoQubitGate(gate: Matrix, qubit1: number, qubit2: number): void {
-    if (qubit1 < 0 || qubit1 >= this.numQubits ||
-      qubit2 < 0 || qubit2 >= this.numQubits) {
-      throw new Error(`Invalid qubit indices: ${qubit1}, ${qubit2}`);
-    }
-
-    if (qubit1 === qubit2) {
-      throw new Error('Two-qubit gate must operate on different qubits');
-    }
-
-    const n = this.numQubits;
-    const stateSize = Math.pow(2, n);
-    const newState: Complex[] = Array(stateSize).fill(null).map(() => ({ ...ZERO }));
-
-    // Determine if we need to reorder qubits
-    const [control, target] = [Math.min(qubit1, qubit2), Math.max(qubit1, qubit2)];
-    const needsSwap = qubit1 > qubit2;
-
-    for (let i = 0; i < stateSize; i++) {
-      // Extract bits for the two qubits
-      const bit1 = (i >> (n - 1 - qubit1)) & 1;
-      const bit2 = (i >> (n - 1 - qubit2)) & 1;
-
-      // Original 2-qubit state index
-      const twoQubitIndex = needsSwap ? (bit2 * 2 + bit1) : (bit1 * 2 + bit2);
-
-      for (let j = 0; j < 4; j++) {
-        const newBit1 = needsSwap ? (j & 1) : ((j >> 1) & 1);
-        const newBit2 = needsSwap ? ((j >> 1) & 1) : (j & 1);
-
-        // Build new full state index
-        let newIndex = i;
-        // Clear and set bit1 position
-        newIndex &= ~(1 << (n - 1 - qubit1));
-        newIndex |= (newBit1 << (n - 1 - qubit1));
-        // Clear and set bit2 position
-        newIndex &= ~(1 << (n - 1 - qubit2));
-        newIndex |= (newBit2 << (n - 1 - qubit2));
-
-        const gateElement = gate[j][twoQubitIndex];
-        newState[newIndex] = add(newState[newIndex], multiply(gateElement, this.state[i]));
+      if (prob > 1e-10) {
+        results.push({
+          index: i,
+          amplitude: { real: re, imag: im },
+          probability: prob
+        });
+        if (results.length >= maxElements) break;
       }
     }
-
-    this.state = newState;
-    this.history.push([...this.state]);
+    return results;
   }
 
-  /**
-   * High-level gate application
-   */
-  apply(gateName: string, ...qubits: number[]): void;
-  apply(gateName: string, params: number[], ...qubits: number[]): void;
+  getProbabilities(): number[] {
+    const size = Math.pow(2, this.numQubits);
+    const resultSize = Math.min(size, 1024 * 16);
+    const probs = new Float64Array(resultSize);
+    for (let i = 0; i < resultSize; i++) {
+      const re = this.state[2 * i];
+      const im = this.state[2 * i + 1];
+      probs[i] = re * re + im * im;
+    }
+    return Array.from(probs);
+  }
+
   apply(gateName: string, ...args: (number | number[])[]): void {
     let params: number[] = [];
     let qubits: number[];
@@ -220,265 +116,182 @@ export class QuantumSimulator {
     }
 
     const gateInfo = Gates.GATE_LIBRARY[gateName];
-    if (!gateInfo) {
-      throw new Error(`Unknown gate: ${gateName}`);
-    }
+    if (!gateInfo) throw new Error(`Unknown gate: ${gateName}`);
 
     let matrix: Matrix;
     if (typeof gateInfo.matrix === 'function') {
-      // Ensure params is an array and has at least one value if required
-      const p = (params && params.length > 0) ? params : [0];
-      matrix = gateInfo.matrix(p);
+      matrix = gateInfo.matrix(params && params.length > 0 ? params : [0]);
     } else {
       matrix = gateInfo.matrix;
     }
-
-    // Safety check for NaN in matrix
-    for (let i = 0; i < matrix.length; i++) {
-      for (let j = 0; j < matrix[i].length; j++) {
-        if (isNaN(matrix[i][j].real) || isNaN(matrix[i][j].imag)) {
-          throw new Error(`Gate ${gateName} produced NaN matrix elements with params ${JSON.stringify(params)}`);
-        }
-      }
-    }
-
-    this.operations.push({ gate: gateName, qubits, params });
 
     if (gateInfo.qubits === 1) {
       this.applySingleQubitGate(matrix, qubits[0]);
     } else if (gateInfo.qubits === 2) {
       this.applyTwoQubitGate(matrix, qubits[0], qubits[1]);
     } else {
-      // For 3+ qubit gates, use general approach
       this.applyMultiQubitGate(matrix, qubits);
     }
   }
 
-  /**
-   * Apply arbitrary multi-qubit gate
-   */
+  private applySingleQubitGate(gate: Matrix, qubit: number): void {
+    const n = this.numQubits;
+    const size = Math.pow(2, n);
+    const mask = 1 << (n - 1 - qubit);
+
+    // Extract matrix elements for speed
+    const g00_re = gate[0][0].real, g00_im = gate[0][0].imag;
+    const g01_re = gate[0][1].real, g01_im = gate[0][1].imag;
+    const g10_re = gate[1][0].real, g10_im = gate[1][0].imag;
+    const g11_re = gate[1][1].real, g11_im = gate[1][1].imag;
+
+    for (let i = 0; i < size; i++) {
+      if ((i & mask) === 0) {
+        const i0 = 2 * i;
+        const i1 = 2 * (i | mask);
+
+        const v0_re = this.state[i0];
+        const v0_im = this.state[i0 + 1];
+        const v1_re = this.state[i1];
+        const v1_im = this.state[i1 + 1];
+
+        // i0 = g00*v0 + g01*v1
+        this.state[i0] = (g00_re * v0_re - g00_im * v0_im) + (g01_re * v1_re - g01_im * v1_im);
+        this.state[i0 + 1] = (g00_re * v0_im + g00_im * v0_re) + (g01_re * v1_im + g01_im * v1_re);
+
+        // i1 = g10*v0 + g11*v1
+        this.state[i1] = (g10_re * v0_re - g10_im * v0_im) + (g11_re * v1_re - g11_im * v1_im);
+        this.state[i1 + 1] = (g10_re * v0_im + g10_im * v0_re) + (g11_re * v1_im + g11_im * v1_re);
+      }
+    }
+  }
+
+  private applyTwoQubitGate(gate: Matrix, q1: number, q2: number): void {
+    const n = this.numQubits;
+    const size = Math.pow(2, n);
+    const m1 = 1 << (n - 1 - q1);
+    const m2 = 1 << (n - 1 - q2);
+
+    for (let i = 0; i < size; i++) {
+      if ((i & m1) === 0 && (i & m2) === 0) {
+        const i00 = i;
+        const i01 = i | m2;
+        const i10 = i | m1;
+        const i11 = i | m1 | m2;
+
+        const indices = [i00, i01, i10, i11];
+        const v_re = indices.map(idx => this.state[2 * idx]);
+        const v_im = indices.map(idx => this.state[2 * idx + 1]);
+
+        for (let row = 0; row < 4; row++) {
+          let target_re = 0, target_im = 0;
+          for (let col = 0; col < 4; col++) {
+            const g_re = gate[row][col].real;
+            const g_im = gate[row][col].imag;
+            target_re += (g_re * v_re[col] - g_im * v_im[col]);
+            target_im += (g_re * v_im[col] + g_im * v_re[col]);
+          }
+          const target_idx = indices[row];
+          this.state[2 * target_idx] = target_re;
+          this.state[2 * target_idx + 1] = target_im;
+        }
+      }
+    }
+  }
+
   private applyMultiQubitGate(gate: Matrix, qubits: number[]): void {
-    // Simplified implementation for multi-qubit gates
-    // Full implementation would require more complex permutation logic
     const n = this.numQubits;
-    const stateSize = Math.pow(2, n);
+    const size = Math.pow(2, n);
     const gateSize = Math.pow(2, qubits.length);
-    const newState: Complex[] = Array(stateSize).fill(null).map(() => ({ ...ZERO }));
+    const masks = qubits.map(q => 1 << (n - 1 - q));
+    const totalMask = masks.reduce((a, b) => a | b, 0);
 
-    for (let i = 0; i < stateSize; i++) {
-      // Extract the bits corresponding to the gate qubits
-      let gateIndex = 0;
-      for (let q = 0; q < qubits.length; q++) {
-        const bit = (i >> (n - 1 - qubits[q])) & 1;
-        gateIndex |= (bit << (qubits.length - 1 - q));
-      }
-
-      for (let j = 0; j < gateSize; j++) {
-        // Build new index with updated qubit values
-        let newIndex = i;
-        for (let q = 0; q < qubits.length; q++) {
-          const newBit = (j >> (qubits.length - 1 - q)) & 1;
-          newIndex &= ~(1 << (n - 1 - qubits[q]));
-          newIndex |= (newBit << (n - 1 - qubits[q]));
+    for (let i = 0; i < size; i++) {
+      if ((i & totalMask) === 0) {
+        const subIndices = new Int32Array(gateSize);
+        for (let j = 0; j < gateSize; j++) {
+          let idx = i;
+          for (let k = 0; k < qubits.length; k++) {
+            if ((j >> (qubits.length - 1 - k)) & 1) {
+              idx |= masks[k];
+            }
+          }
+          subIndices[j] = idx;
         }
 
-        const gateElement = gate[j][gateIndex];
-        newState[newIndex] = add(newState[newIndex], multiply(gateElement, this.state[i]));
-      }
-    }
+        const v_re = new Float64Array(gateSize);
+        const v_im = new Float64Array(gateSize);
+        for (let j = 0; j < gateSize; j++) {
+          v_re[j] = this.state[2 * subIndices[j]];
+          v_im[j] = this.state[2 * subIndices[j] + 1];
+        }
 
-    this.state = newState;
-    this.history.push([...this.state]);
-  }
-
-  /**
-   * Measure a single qubit
-   */
-  measure(qubit: number): MeasurementResult {
-    if (qubit < 0 || qubit >= this.numQubits) {
-      throw new Error(`Invalid qubit index: ${qubit}`);
-    }
-
-    const n = this.numQubits;
-    const stateSize = Math.pow(2, n);
-
-    // Calculate probabilities for |0⟩ and |1⟩
-    let prob0 = 0;
-    let prob1 = 0;
-
-    for (let i = 0; i < stateSize; i++) {
-      const bit = (i >> (n - 1 - qubit)) & 1;
-      const prob = magnitudeSquared(this.state[i]);
-      if (bit === 0) {
-        prob0 += prob;
-      } else {
-        prob1 += prob;
-      }
-    }
-
-    // Random measurement outcome
-    const random = Math.random();
-    const outcome = random < prob0 ? 0 : 1;
-    const probability = outcome === 0 ? prob0 : prob1;
-
-    // Collapse the state
-    const normFactor = 1 / Math.sqrt(probability);
-    const collapsedState: Complex[] = [];
-
-    for (let i = 0; i < stateSize; i++) {
-      const bit = (i >> (n - 1 - qubit)) & 1;
-      if (bit === outcome) {
-        collapsedState.push(scale(this.state[i], normFactor));
-      } else {
-        collapsedState.push({ ...ZERO });
-      }
-    }
-
-    this.state = collapsedState;
-    this.history.push([...this.state]);
-    this.operations.push({ gate: 'MEASURE', qubits: [qubit] });
-
-    return { outcome, probability, collapsedState: [...this.state] };
-  }
-
-  /**
-   * Measure all qubits
-   */
-  measureAll(): number[] {
-    const results: number[] = [];
-    for (let i = 0; i < this.numQubits; i++) {
-      results.push(this.measure(i).outcome);
-    }
-    return results;
-  }
-
-  /**
-   * Get probability distribution without collapsing
-   */
-  getProbabilities(): number[] {
-    return this.state.map(amp => magnitudeSquared(amp));
-  }
-
-  /**
-   * Get probability of measuring a specific outcome
-   */
-  getProbability(outcome: number): number {
-    if (outcome < 0 || outcome >= this.state.length) {
-      return 0;
-    }
-    return magnitudeSquared(this.state[outcome]);
-  }
-
-  /**
-   * Sample measurements without affecting state
-   */
-  sample(shots: number): Map<string, number> {
-    const probabilities = this.getProbabilities();
-    const results = new Map<string, number>();
-
-    for (let shot = 0; shot < shots; shot++) {
-      const random = Math.random();
-      let cumulative = 0;
-
-      for (let i = 0; i < probabilities.length; i++) {
-        cumulative += probabilities[i];
-        if (random < cumulative) {
-          const bitstring = i.toString(2).padStart(this.numQubits, '0');
-          results.set(bitstring, (results.get(bitstring) || 0) + 1);
-          break;
+        for (let row = 0; row < gateSize; row++) {
+          let target_re = 0, target_im = 0;
+          for (let col = 0; col < gateSize; col++) {
+            const g_re = gate[row][col].real;
+            const g_im = gate[row][col].imag;
+            target_re += (g_re * v_re[col] - g_im * v_im[col]);
+            target_im += (g_re * v_im[col] + g_im * v_re[col]);
+          }
+          this.state[2 * subIndices[row]] = target_re;
+          this.state[2 * subIndices[row] + 1] = target_im;
         }
       }
     }
-
-    return results;
   }
 
-  /**
-   * Calculate fidelity between current state and target state
-   */
-  fidelity(targetState: Complex[]): number {
-    if (targetState.length !== this.state.length) {
-      throw new Error('State dimensions must match');
-    }
-
-    let overlap = ZERO;
-    for (let i = 0; i < this.state.length; i++) {
-      overlap = add(overlap, multiply(
-        { real: targetState[i].real, imag: -targetState[i].imag },
-        this.state[i]
-      ));
-    }
-
-    return magnitudeSquared(overlap);
-  }
-
-  /**
-   * Reset to |0...0⟩
-   */
-  reset(): void {
-    const stateSize = Math.pow(2, this.numQubits);
-    this.state = Array(stateSize).fill(null).map(() => ({ ...ZERO }));
-    this.state[0] = { ...ONE };
-    this.history = [[...this.state]];
-    this.operations = [];
-  }
-
-  /**
-   * Get Bloch sphere coordinates for a single qubit
-   * Only valid for single-qubit states or reduced density matrices
-   */
   getBlochCoordinates(qubit: number): { x: number; y: number; z: number } {
-    if (this.numQubits === 1) {
-      const alpha = this.state[0];
-      const beta = this.state[1];
-
-      // Bloch sphere coordinates
-      // |ψ⟩ = cos(θ/2)|0⟩ + e^(iφ)sin(θ/2)|1⟩
-      const theta = 2 * Math.acos(Math.min(1, magnitude(alpha)));
-      const phi = Math.atan2(beta.imag, beta.real) - Math.atan2(alpha.imag, alpha.real);
-
-      return {
-        x: Math.sin(theta) * Math.cos(phi),
-        y: Math.sin(theta) * Math.sin(phi),
-        z: Math.cos(theta),
-      };
-    }
-
-    // For multi-qubit systems, compute reduced density matrix
-    // Simplified: trace out other qubits
     const n = this.numQubits;
-    const stateSize = Math.pow(2, n);
-
+    const size = Math.pow(2, n);
     let rho00 = 0, rho11 = 0;
-    let rho01: Complex = { ...ZERO };
+    let rho01_re = 0, rho01_im = 0;
+    const mask = 1 << (n - 1 - qubit);
 
-    for (let i = 0; i < stateSize; i++) {
-      const bit = (i >> (n - 1 - qubit)) & 1;
-      const prob = magnitudeSquared(this.state[i]);
-
-      if (bit === 0) rho00 += prob;
-      else rho11 += prob;
-    }
-
-    // Cross terms (simplified)
-    for (let i = 0; i < stateSize; i++) {
-      const bit_i = (i >> (n - 1 - qubit)) & 1;
-      if (bit_i === 0) {
-        const j = i | (1 << (n - 1 - qubit));
-        const contrib = multiply(
-          { real: this.state[i].real, imag: -this.state[i].imag },
-          this.state[j]
-        );
-        rho01 = add(rho01, contrib);
+    for (let i = 0; i < size; i++) {
+      const re = this.state[2 * i];
+      const im = this.state[2 * i + 1];
+      const prob = re * re + im * im;
+      if ((i & mask) === 0) {
+        rho00 += prob;
+        const j = i | mask;
+        const re_j = this.state[2 * j];
+        const im_j = this.state[2 * j + 1];
+        // rho01 = state[i] * conj(state[j])
+        rho01_re += (re * re_j + im * im_j);
+        rho01_im += (im * re_j - re * im_j);
+      } else {
+        rho11 += prob;
       }
     }
 
     return {
-      x: 2 * rho01.real,
-      y: 2 * rho01.imag,
+      x: 2 * rho01_re,
+      y: 2 * rho01_im,
       z: rho00 - rho11,
     };
   }
-}
 
-export { Gates };
+  sample(shots: number): Map<string, number> {
+    const size = Math.pow(2, this.numQubits);
+    const probs = new Float64Array(size);
+    for (let i = 0; i < size; i++) {
+      probs[i] = this.state[2 * i] * this.state[2 * i] + this.state[2 * i + 1] * this.state[2 * i + 1];
+    }
+
+    const results = new Map<string, number>();
+    for (let shot = 0; shot < shots; shot++) {
+      const rnd = Math.random();
+      let cumulative = 0;
+      for (let i = 0; i < size; i++) {
+        cumulative += probs[i];
+        if (rnd < cumulative) {
+          const bits = i.toString(2).padStart(this.numQubits, '0');
+          results.set(bits, (results.get(bits) || 0) + 1);
+          break;
+        }
+      }
+    }
+    return results;
+  }
+}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            border-radius: 12px;
+            /* Smooth corners for the splash */
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .overlay {
+            position: absolute;
+            bottom: 24px;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            opacity: 0.8;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+
+<body>
+    <video id="splashVideo" autoplay muted playsinline>
+        <source src="logo-animation.mp4" type="video/mp4">
+    </video>
+    <div class="overlay">Initializing Simulator</div>
+    <script>
+        // Ensure video plays even if there are loading issues
+        const video = document.getElementById('splashVideo');
+        video.onerror = function () {
+            console.error('Video loading failed');
+            document.body.style.background = 'linear-gradient(135deg, #000 0%, #1e3a8a 100%)';
+        };
+    </script>
+</body>
+
+</html>

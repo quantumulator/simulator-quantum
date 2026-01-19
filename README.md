@@ -9,7 +9,7 @@
 
 > **The most intuitive quantum computing simulator powered by AI. Just tell it what you want to build.**
 
-![Quantum Simulator Demo](/public/main_image.png)
+![Quantum Simulator Demo](/public/logo-animation.mp4)
 
 ## What Is This?
 

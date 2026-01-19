@@ -38,8 +38,7 @@ export type {
   MeasurementResult,
   SimulatorConfig,
   NoiseModel,
-  GateOperation,
-  CircuitStep
+  GateOperation
 } from './simulator';
 
 // Validators for robust error handling

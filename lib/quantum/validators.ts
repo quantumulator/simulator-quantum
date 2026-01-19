@@ -31,9 +31,12 @@ export const ErrorCodes = {
     MEMORY_LIMIT: 'MEMORY_LIMIT',
 } as const;
 
+// Check if running in Electron
+const isElectron = typeof navigator !== 'undefined' && /electron/i.test(navigator.userAgent);
+
 // Configuration limits
 export const LIMITS = {
-    MAX_QUBITS: 20, // 2^20 = 1M amplitudes, ~16MB memory
+    MAX_QUBITS: isElectron ? 30 : 20, // Increase limit for desktop app
     MIN_QUBITS: 1,
     MAX_CIRCUIT_DEPTH: 1000,
     MAX_SHOTS: 100000,

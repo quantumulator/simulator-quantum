@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Atom, ArrowRight, Code, BarChart3, Sparkles, Github, BookOpen, Cpu } from "lucide-react";
+import { Atom, ArrowRight, Code, BarChart3, Sparkles, Github, BookOpen, Cpu, Monitor, Download } from "lucide-react";
 
 export default function Home() {
   return (
@@ -8,19 +8,19 @@ export default function Home() {
       <header className="container mx-auto px-4 py-6">
         <nav className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Atom className="h-8 w-8 text-purple-500" />
-            <span className="text-xl font-bold">Quantum Simulator</span>
+            <img src="/logo.png" alt="QuantumFlow Logo" className="h-8 w-8 object-contain" />
+            <span className="text-xl font-bold">QuantumFlow</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link 
-              href="/simulator" 
+            <Link
+              href="/simulator"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Simulator
             </Link>
-            <a 
-              href="https://github.com/quantumulator/simulator-quantum" 
-              target="_blank" 
+            <a
+              href="https://github.com/quantumulator/simulator-quantum"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -37,31 +37,39 @@ export default function Home() {
             <Sparkles className="h-4 w-4" />
             AI-Powered Quantum Computing Education
           </div>
-          
+
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
             Learn Quantum Computing
             <br />
             <span className="text-purple-500">Interactively</span>
           </h1>
-          
+
           <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
-            An open-source quantum simulator that lets you build, visualize, and experiment 
+            An open-source quantum simulator that lets you build, visualize, and experiment
             with quantum circuits. Powered by AI to help you understand complex concepts.
           </p>
-          
-          <div className="flex items-center justify-center gap-4">
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/simulator"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors"
             >
               Launch Simulator
               <ArrowRight className="h-5 w-5" />
             </Link>
             <a
+              href="/download/QuantumFlow-Setup.exe"
+              download="QuantumFlow-Setup.exe"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-card border border-purple-500/50 text-foreground rounded-lg font-medium hover:bg-purple-500/5 transition-colors group"
+            >
+              <Monitor className="h-5 w-5 text-purple-500 transition-transform group-hover:scale-110" />
+              Download for Windows
+            </a>
+            <a
               href="https://github.com/quantumulator/simulator-quantum"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
             >
               <Github className="h-5 w-5" />
               View Source
@@ -77,62 +85,62 @@ export default function Home() {
             </div>
             <h3 className="text-xl font-semibold mb-3">Real Quantum Simulation</h3>
             <p className="text-muted-foreground">
-              Accurate simulation of quantum states, gates, and measurements. Supports up to 
+              Accurate simulation of quantum states, gates, and measurements. Supports up to
               20 qubits with state vector representation.
             </p>
           </div>
-          
+
           <div className="p-8 rounded-2xl bg-card border">
             <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-6">
               <Sparkles className="h-6 w-6 text-purple-500" />
             </div>
             <h3 className="text-xl font-semibold mb-3">AI-Powered Assistant</h3>
             <p className="text-muted-foreground">
-              Ask questions in natural language. Generate circuits, get explanations, 
+              Ask questions in natural language. Generate circuits, get explanations,
               and learn quantum concepts with AI guidance.
             </p>
           </div>
-          
+
           <div className="p-8 rounded-2xl bg-card border">
             <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-6">
               <BarChart3 className="h-6 w-6 text-purple-500" />
             </div>
             <h3 className="text-xl font-semibold mb-3">3D Visualization</h3>
             <p className="text-muted-foreground">
-              Interactive Bloch sphere, probability distributions, and state vector displays. 
+              Interactive Bloch sphere, probability distributions, and state vector displays.
               See quantum states come to life.
             </p>
           </div>
-          
+
           <div className="p-8 rounded-2xl bg-card border">
             <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-6">
               <Code className="h-6 w-6 text-purple-500" />
             </div>
             <h3 className="text-xl font-semibold mb-3">Code Editor</h3>
             <p className="text-muted-foreground">
-              Write quantum circuits in TypeScript with full syntax highlighting. 
+              Write quantum circuits in TypeScript with full syntax highlighting.
               Export to Python/Qiskit for use on real quantum hardware.
             </p>
           </div>
-          
+
           <div className="p-8 rounded-2xl bg-card border">
             <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-6">
               <BookOpen className="h-6 w-6 text-purple-500" />
             </div>
             <h3 className="text-xl font-semibold mb-3">Educational Content</h3>
             <p className="text-muted-foreground">
-              Built-in tutorials, algorithm examples, and concept explanations. 
+              Built-in tutorials, algorithm examples, and concept explanations.
               Perfect for students and researchers alike.
             </p>
           </div>
-          
+
           <div className="p-8 rounded-2xl bg-card border">
             <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-6">
               <Github className="h-6 w-6 text-purple-500" />
             </div>
             <h3 className="text-xl font-semibold mb-3">Open Source</h3>
             <p className="text-muted-foreground">
-              Fully open source under MIT license. Contribute, customize, and 
+              Fully open source under MIT license. Contribute, customize, and
               extend the simulator for your needs.
             </p>
           </div>
@@ -144,9 +152,9 @@ export default function Home() {
           <p className="text-muted-foreground mb-12 max-w-2xl mx-auto">
             Try these quantum circuits to get started. Click any example to load it in the simulator.
           </p>
-          
+
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <Link 
+            <Link
               href="/simulator?circuit=bell"
               className="p-6 rounded-xl bg-card border hover:border-purple-500 transition-colors group"
             >
@@ -160,8 +168,8 @@ export default function Home() {
                 H(0) → CNOT(0,1)
               </code>
             </Link>
-            
-            <Link 
+
+            <Link
               href="/simulator?circuit=grover"
               className="p-6 rounded-xl bg-card border hover:border-purple-500 transition-colors group"
             >
@@ -175,8 +183,8 @@ export default function Home() {
                 H → Oracle → Diffusion
               </code>
             </Link>
-            
-            <Link 
+
+            <Link
               href="/simulator?circuit=teleportation"
               className="p-6 rounded-xl bg-card border hover:border-purple-500 transition-colors group"
             >
@@ -199,16 +207,16 @@ export default function Home() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Atom className="h-5 w-5 text-purple-500" />
-              <span className="font-medium">Quantum Simulator</span>
+              <img src="/logo.png" alt="QuantumFlow Logo" className="h-5 w-5 object-contain" />
+              <span className="font-medium">QuantumFlow</span>
             </div>
             <p className="text-sm text-muted-foreground">
               Open source • Built with Passion for Quantum Computing
             </p>
             <div className="flex items-center gap-4">
-              <a 
-                href="https://github.com/quantumulator/simulator-quantum" 
-                target="_blank" 
+              <a
+                href="https://github.com/quantumulator/simulator-quantum"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >

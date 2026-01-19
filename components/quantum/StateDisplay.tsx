@@ -11,25 +11,24 @@ export function StateDisplay() {
   const { simulationResult, numQubits, runMeasurement } = useQuantumStore();
 
   const stateEntries = useMemo(() => {
-    if (!simulationResult?.stateVector) return [];
-    
-    return simulationResult.stateVector
-      .map((amplitude, index) => ({
-        index,
-        label: `|${index.toString(2).padStart(numQubits, '0')}⟩`,
-        amplitude,
-        probability: simulationResult.probabilities[index],
+    if (!simulationResult?.sparseState) return [];
+
+    return simulationResult.sparseState
+      .map((entry) => ({
+        index: entry.index,
+        label: `|${entry.index.toString(2).padStart(numQubits, '0')}⟩`,
+        amplitude: entry.amplitude,
+        probability: entry.probability,
       }))
-      .filter(entry => entry.probability > 1e-10)
       .sort((a, b) => b.probability - a.probability);
   }, [simulationResult, numQubits]);
 
   const measurementEntries = useMemo(() => {
     if (!simulationResult?.measurements) return [];
-    
+
     const total = Array.from(simulationResult.measurements.values())
       .reduce((sum, count) => sum + count, 0);
-    
+
     return Array.from(simulationResult.measurements.entries())
       .map(([bitstring, count]) => ({
         bitstring: `|${bitstring}⟩`,
